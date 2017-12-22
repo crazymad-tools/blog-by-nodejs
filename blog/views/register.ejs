@@ -1,0 +1,59 @@
+<html>
+<head>
+  <script src="/js/ajax.js"></script>
+  <script src="/js/base.js"></script>
+  <script>
+    function check() {
+        var account = $("#account").value;
+        var password = $("#password").value;
+        var rePassword = $("#confirm_pwd").value;
+        if (account != "" && password != "" && rePassword == password) {
+            var json = {
+                account: account,
+                password: password,
+            };
+            return json;
+        } else {
+            return null;
+        }
+    }
+    window.onload = function() {
+        $("#show").onclick = function() {
+            console.log($("#head").files[0]);
+        }
+        $("#submit").onclick = function() {
+            var json = check();
+            if (null == json) {
+                alert("请输入完整账号信息");
+            } else {
+                Ajax(json, "post", "mysql/register", function(res) {
+                    var json = JSON.parse(res);
+                    console.log(json);
+                    if ("success" == json.res) {
+                        var head = $("#head").files[0];
+                        if (head === undefined) return;         // 退出函数
+                        upload_file(head, "upload/head", function(res) {
+                            if ("success" == res) {
+                                alert("账户申请成功，已登录");
+                            } else {
+                                alert("账户申请成功，已登录，头像上传失败");
+                            }
+                        })
+                    } else if ("user exist" == json.res) {
+                        alert("该用户已存在");
+                    }
+                });
+            }
+        }
+    }
+  </script>
+</head>
+<body>
+  Account：&nbsp;<input id="account" type="text" /> <br />
+  Password：&nbsp;<input id="password" type="password" /> <br />
+  Again：&nbsp;<input id="confirm_pwd" type="password" /> <br />
+  Head:&nbsp;<input id="head" type="file" /> <br />
+  <input id="submit" type="submit" value="Submit" />
+  <input id="show" type="submit" value="Show" />
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <!-- <link rel='stylesheet' href='/css/style.css' /> -->
+    <link rel="stylesheet" href="/css/blog.css" />
+    <script src="js/ajax.js"></script>
+    <script src="js/base.js"></script>
+    <script src="js/jquery.js"></script>
+    <script>
+      var islogin = <%- islogin %>;
+      window.onload = function() {
+          if (islogin == true) {
+              $("#login").innerHTML = "登出";
+              $("#login").href = "";
+              $("#login").onclick = function() {
+                  Ajax({op: 'logout'}, "POST", "/mysql/logout", function(res) {
+                      res = JSON.parse(res)
+                      if ("success" == res.res) {
+                          document.location.reload();
+                      }
+                  });
+              };
+          }
+          Ajax("", "GET", "list", function(res) {
+              var list = JSON.parse(res);
+              var len = list.length;
+              var html = "";
+              for (var i = 0; i < len; i++) {
+                  html += "<a href='show?blogid=" + list[i].blogid + "'>" + list[i].title + "</a><br/><br/>"
+              }
+              console.log(html);
+              document.getElementById("list").innerHTML = html;
+        })
+      }
+    </script>
+  </head>
+  <body style="padding: 30px 150px 0px 150px;">
+  <img src="/images/title.png" style="width: 500px;">
+  <h2>
+    <a class="a_link" href="register">注册&nbsp;</a>
+    <a id="login" class="a_link" href="login?pre=index">登录&nbsp;</a>
+    <a class="a_link" href="category">分类&nbsp;</a>
+    <a class="a_link" href="setting">设置&nbsp;</a>
+    <a class="a_link" href="edit"><%= edit %></a>
+  </h2>
+    <div id="list"></div>
+  </body>
+</html>

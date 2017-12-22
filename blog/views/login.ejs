@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <script>
+      var pre = "<%- pre %>";
+      window.onload = function() {
+          document.getElementById("submit").onclick = function() {
+              var account = document.getElementById("account").value;
+              var password = document.getElementById("password").value;
+              //console.log(account, password);
+              var ajax;
+              if (window.XMLHttpRequest) {
+                  ajax = new XMLHttpRequest();
+              } else {
+                  ajax = new ActiveXObject("Microsoft.XMLHTTP");
+              }
+              var json = [];
+              json.push({
+                  account: account,
+                  password: password
+              });
+              json = JSON.stringify(json);
+              console.log(json);
+              ajax.onreadystatechange = function() {
+                  if (4 == ajax.readyState && 200 == ajax.status) {
+                      console.log(ajax.responseText);
+                      if ("success" == ajax.responseText) {
+                          alert("登陆成功");
+                          window.location.href = pre;
+                      } else {
+                          alert("登陆失败");
+                      }
+                  }
+              }
+              ajax.open("POST", "mysql", true);
+              //ajax.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+              ajax.setRequestHeader("Content-type","application/json");
+              ajax.send(json);
+          }
+      }
+  </script>
+</head>
+<body>
+<div>
+  Account: <input id="account" type="text" /> <br />
+  Password: <input id="password" type="password" /> <br />
+  <input id="submit" type="submit" value="Login" />
+</div>
+</body>
+</html>

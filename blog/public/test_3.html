@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .div_center {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 100px;
+            margin: 0 auto;
+            width: 300px;
+            height: 100px;
+            border: 1px solid gray;
+            border-radius: 10px;
+        }
+        .div_center::before, .div_center::after {
+            content: "";
+            position: absolute;
+            //border: solid transparent;
+            width: 0px;
+            height: 0px;
+        }
+        .div_center::before {
+            top: 10px;
+            left: -20px;
+            border-left: 20px solid transparent;
+            border-top: 20px solid gray;
+        }
+        .div_center::after {
+            top: 11px;
+            left: -18px;
+            border-left: 18px solid transparent;
+            border-top: 18px solid white;
+        }
+        .div_san {
+             width: 0;
+             height: 0;
+            border: solid transparent;
+            border-width: 10px;
+            border-top-color: red;
+        }
+    </style>
+</head>
+<body style="position: absolute;">
+<div class="div_center"></div>
+<div class="div_san"></div>
+<div style="width: 0; height: 0;border-top: 100px solid black; border-left: 100px solid transparent;">
+</div>
+<div class="clickme" onclick="clickme(this)" style="margin-top: 100px;">click me</div>
+<script>
+    function oo(name, age, sex) {
+        this.name = name;
+        this.age = age;
+        this.sex = sex;
+    };
+    window.onload = function() {
+        var obj = new oo("crazy_mad", 21, "male");
+        for (var p in obj) {
+            console.log(p);
+        }
+    }
+    function clickme(node) {
+        console.log(node.style.marginTop);
+        var top = parseInt(node.style.marginTop.match(/[0-9]+/g)[0]);
+        console.log(top);
+        //var ttop = node.style.top ? node.style.top.match(/[0-9]+/g)[0] : node.style.marginTop.match(/[0-9]+/g)[0];
+        var ttop = node.style.marginTop ? node.style.marginTop.match(/[0-9]+/g)[0] : node.style.top.match(/[0-9]+/g)[0];
+        console.log(ttop);
+    }
+</script>
+<div style="width: 100px; height: 100px; background-color: red; margin-left: -50px;">
+</div>
+<font style="font-family: STXihei">hello world</font>
+<h1 style="font-family: STXihei; font-weight: bold">hello world</h1>
+<h1 style="font-family: STXihei; font-weight: 900">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: '华文彩云'; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<h1 style="font-family: Arial; font-weight: 900; color: gray;">CRAZY_MAD'S BLOG</h1>
+<div style="padding-top: 10px; text-align: center; background-color: #383733; height: 80px; width: 100%; position: absolute; bottom: 0;">
+    <p style="color: #BAB7AA; font-weight: 600;">
+        Copyright &copy; 2016-2017 by crazymad<br/>
+        mail: crazy_mad01@163.com or 2116913961@qq.com<br/>
+        NBUT CS-154
+    </p>
+</div>
+</body>
+</html>

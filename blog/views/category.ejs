@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/css/blog.css" />
+    <style>
+      .tr_row {
+        height: 40px;
+        line-height: 40px;
+      }
+      .a_disable {
+        background-color: gray;
+      }
+      .title_a {
+        cursor: pointer;
+        color: black;
+      }
+      .detail_a {
+        color: #E36A24;
+      }
+      .detail_a:hover {
+        color: #2AA38B;
+      }
+    </style>
+    <script src="js/ajax.js"></script>
+    <script src="js/base.js"></script>
+    <script>
+        var category = <%- category %>;
+        var islogin = <%- islogin %>;
+        var isedit = false;
+        var details = new Array(category.length);
+        var detail_index = -1;
+        var show_detail = function(index) {
+            if (detail_index != -1 && detail_index != index) {
+                return;
+            } else if (0 == category[index].count) {
+                return;
+            }
+            var rows = $("row");
+            console.log(detail_index);
+            if (detail_index == index) {            // 收起
+                console.log(rows[index].childNodes);
+                rows[index].removeChild(rows[index].childNodes[3]);
+                detail_index = -1;          // 复位
+                return;
+            } else {
+                detail_index = index;
+                if (details[index]) {
+                    rows[index].innerHTML += details[index];
+                    return;
+                }
+                json = {
+                    class_id: category[index].class_id,
+                };
+                Ajax(json, "POST", "/list/category_article", function(res) {
+                    res = JSON.parse(res);
+                    if (res.res && "success" == res.res) {
+                        console.log("no this class");
+                        return;
+                    }
+                    var html = "<div style='margin: 5px 20px 0px 20px; padding: 5px 5px 5px 5px; border-radius:5px; background-color: white;'>";
+                    for (var i = 0; i < res.length; i++) {
+                        html += "<a class='detail_a' href='show?blogid="+res[i].article_id+"'>" + res[i].title + "</a><br />";
+                    }
+                    html += "</div>"
+                    details[index] = html;
+                    rows[index].innerHTML += html;
+                })
+            }
+        }
+        var click_delete = function(index) {
+            if (islogin == false) {
+                if (confirm("当前不具备删改权限，是否前往登录？")) {
+                    document.location.href = "login?pre=category";
+                    return;
+                } else {
+                    return;
+                }
+            } else if (confirm("是否删除包括"+category[index].count+"篇文章在内的"+category[index].name+"栏目?")) {
+                var json = {
+                    class_id: category[index].class_id,
+                }
+                Ajax(json, "POST", "/edit/category/delete", function(res) {
+                    res = JSON.parse(res);
+                    if ("success" == res.res) {
+                        alert("删除成功");
+                        document.location.reload();
+                    }
+                })
+            }
+        }
+        var click_save = function(index) {
+            var titles = $("title");
+            var newname = titles[index].firstChild.value;
+            titles[index].innerHTML = "<a class='title_a' onclick='show_detail("+index+")'>" + newname + "</a>";
+            if (newname != category[index].name) {
+                var json = {
+                    class_id: category[index].class_id,
+                    name: newname,
+                };
+                Ajax(json, 'POST', '/edit/category', function(text) {
+                    var res = JSON.parse(text);
+                    if ("success" == res.res) {
+                        alert("修改成功");
+                        category[index].name = newname;
+                    } else {
+                        alert("修改失败");
+                    }
+                });
+            }
+            isedit = false;
+        }
+        var click_cancel = function(index) {
+            var titles = $("title");
+            titles[index].innerHTML = "<a class='title_a' onclick='show_detail("+index+")'>" + category[index].name + "</a>";
+            isedit = false;
+        }
+        var click_edit = function(index) {
+            if (islogin == false) {
+                if (confirm("当前不具备删改权限，是否前往登录？")) {
+                    document.location.href = "login?pre=category";
+                } else {
+                    return;
+                }
+            } else if (detail_index != -1) {
+                return;
+            }
+            if (isedit == true) return;
+            isedit = true;
+            var titles = $("title");
+            var html = "<input style='width:200px;font-size:16px ' type='text' value='"+category[index].name+"'>";
+            html += "&nbsp;<a onclick='click_save("+index+")' class='a_bt'>保存</a>&nbsp;";
+            html += "<a onclick='click_cancel("+index+")' class='a_bt'>取消</a>";
+            titles[index].innerHTML = html;
+        }
+        var change_color = function(node, index) {
+            node.style.backgroundColor = "#E1FBFF";
+            node.onmouseout = function() {
+                if (0 == index%2) {
+                    node.style.backgroundColor = "white";
+                } else {
+                    node.style.backgroundColor = "#ECF1E0";
+                }
+            }
+        };
+    </script>
+</head>
+<body style="padding: 30px 150px 0px 150px;">
+    <h2>分类</h2>
+    <table style="width: 100%;" id="colum">
+      <tr>
+        <td style="width: 50%;">名称</td>
+        <td style="width: 30%;">文章</td>
+        <td style="width: 20%;">操作</td>
+    </table>
+    </tr>
+    <hr>
+    <div id="list">
+      <%- list %>
+    </div>
+  <script>
+    window.onload = function() {
+        var rows = $("row");
+        for (var i = 0; i < rows.length; i++) {
+            if (1 == i % 2) rows[i].style.backgroundColor = "#ECF1E0";
+        }
+        if (islogin == false) {
+            var dis = document.getElementsByClassName("a_disable");
+            for (var i = 0; i < dis.length; i++) {
+                dis[i].addEventListener("mouseover", function() {
+                    var text = this.innerHTML;
+                    this.innerHTML = "登录";
+                    this.addEventListener("mouseout", function() {
+                        this.innerHTML = text;
+                    });
+                }, false);
+            }
+        }
+        var title_as = $("title_a");
+        /*for (var i = 0; i < title_as.length; i++) {
+            title_as[i].addEventListener("mouseover", function() {
+                console.log("show");
+                show_detail(i);
+                this.addEventListener("mouseout", function() {
+                    show_detail(i);
+                })
+            });
+        }*/
+    }
+  </script>
+</body>
+</html>

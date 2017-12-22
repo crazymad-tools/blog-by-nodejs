@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload</title>
+  <script>
+    window.onload = function() {
+        document.getElementById("submit").onclick = function() {
+            var ajax;
+            if (window.XMLHttpRequest) {
+                ajax = new XMLHttpRequest();
+            } else {
+                ajax = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            var file = document.getElementById("file").files[0];
+            var formdata = new FormData();
+            formdata.append('file', file);
+            formdata.append('name', file.name);
+            console.log(file);
+            ajax.onreadystatechange = function() {
+                if (4 == ajax.readyState && 200 == ajax.status) {
+                    console.log(ajax.responseText);
+                }
+            }
+            ajax.open("POST", "upload", true);
+            //ajax.setRequestHeader("Content-type", "Multipart/form-data");
+            //ajax.setRequestHeader("Content-type", "undefined");
+            ajax.send(formdata);
+        }
+    }
+  </script>
+</head>
+<body>
+<div>
+  <input type="file" id="file"/>
+  <input type="submit" id="submit" value="submit"/>
+  <form action="upload" method="post" enctype="multipart/form-data">
+    <input name="inputFile" type="file" multiple="multiple" />
+    <input name="btnUp" type="submit" value="上传" />
+  </form>
+</div>
+</body>
+</html>

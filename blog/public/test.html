@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+<script>
+    var timer_2 = null;
+    window.onload = function() {
+        var text = document.getElementById("test");
+        //alert(text.innerHTML);
+        var str = text.innerHTML;
+        console.log(str);
+        var tmp = str.match(/^(\t*)/g);
+        console.log("tmp[0].length:" + tmp[0].length);
+
+        var lll = "\t\t\thello\t\t\tcaocaoca";
+        var aaa = lll.match(/^(\t*)/g);
+        console.log(lll);
+        console.log("aaa[0].length:" + aaa[0].length);
+
+        var c = document.getElementById("can_1");
+        var ctx = c.getContext("2d");
+        /*ctx.fillStyle="#FF0000";                      // 设置填充颜色
+        ctx.fillRect(0,0,150,75);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(200, 200);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(95, 60, 40, 0, 2*Math.PI);
+        ctx.stroke();
+        ctx.font = "30px Arial";
+        ctx.fillText("hello world", 50, 100);
+        ctx.strokeText("hello world", 50, 150);*/
+        var img = document.getElementById("img");
+        ctx.drawImage(img, -100, -100);
+    }
+    var show = function(id, delay) {
+        var timer = null;
+        var div_show = document.getElementById(id);
+        div_show.style.visibility = "visible";
+        timer = setInterval(function() {
+            console.log("timer is working");
+            var div_show = document.getElementById(id);
+            var opa = div_show.style.opacity;
+            var dis = (div_show.style.left).match(/[0-9]+/g)[0];
+            opa = parseFloat(opa);
+            dis = parseFloat(dis);
+            if (opa < 1) {
+                div_show.style.opacity = (opa+0.02+"");
+            }
+            if (dis < 120) {
+                div_show.style.left = (dis+1+"px");
+            }
+            if (opa >= 1 && dis >= 100){
+                clearInterval(timer);
+            }
+        }, delay);
+    }
+</script>
+</head>
+<body>
+<div style="visibility: hidden; position: absolute; left: 100px; top: 0px; opacity: 0.3" id="show_div">
+    <h1>hello world</h1>
+</div>
+<input type="submit" value="over me" id="click_me" onclick="show('show_div', 50)" />
+<pre id='test'>			hello world	hello	hello	hellol;
+</pre>
+<img src="/images/blog/02.png" id="img"/>
+<canvas id="can_1" width="200" height="200" style="border: 1px solid gray"></canvas>
+<video>
+    <source src="http://192.168.19.132/hls/ss.m3u8">
+    你的浏览器不支持H5播放器
+</video>
+<div id="div_li">
+</div>
+<script>
+    window.onload = function() {
+        var div_li = document.getElementById("div_li");
+        var html = "<ol style='list-style-type: none;'><li>超级大本营</li><li>"+"&nbsp;";
+        html += "</li><li>超级大本营</li></ol>"
+        div_li.innerHTML = html;
+    }
+</script>
+</body>
+</html>
