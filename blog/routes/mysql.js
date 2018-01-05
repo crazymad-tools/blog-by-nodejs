@@ -104,6 +104,9 @@ router.get('/', function(req, res, next) {
 router.get('/logout', function(req, res, next) {
     if (req.session.islogin == true) {
         delete req.session.islogin;
+        if (req.session.admin == true) {
+            delete req.session.admin;
+        }
         console.log("user logout");
         res.json(res_suc);
     } else {

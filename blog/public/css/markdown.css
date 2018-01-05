@@ -160,15 +160,15 @@ h1 {
     z-index: -1;
     opacity: 0.7;
 }
-pre ol {
+.text pre ol {
     counter-reset: li;
 }
-pre ol li {
+.text pre ol li {
     list-style: none;
     position: relative;
     padding-left: 10px;
 }
-pre ol li::after {
+.text pre ol li::after {
     content: "";
     position: absolute;
     top: 0px;
@@ -177,7 +177,7 @@ pre ol li::after {
     width: 5px;
     background-color: gray;
 }
-pre ol li::before {
+.text pre ol li::before {
     content: counter(li);
     counter-increment: li;
     position: absolute;

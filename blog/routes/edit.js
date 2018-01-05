@@ -18,10 +18,6 @@ var res_uex = {
 
 function upload_new(res, title, md, pdate, mdate, func) {
     //console.log("upload_new");
-    if (req.session.admin != true) {
-        res.send("you are not admin");
-        return;
-    }
     var sql = "insert into article (title, md, publish_date, modify_date, class) values";
     var data = "'" + title + "','" + md + "','" + pdate + "','" + mdate + "', 2";
     sql = sql + "(" + data + ")";           // 生成数据库操作命令
@@ -35,11 +31,7 @@ function upload_new(res, title, md, pdate, mdate, func) {
     });
 }
 function upload_old(res, blogid, title, md, mdate, func) {
-    //console.log("upload_old");
-    if (req.session.admin != true) {
-        res.send("you are not admin");
-        return;
-    }
+    console.log("upload_old");
     var sql = "update article set title='" +title + "',md='" + md + "',modify_date='" + mdate
         + "' where id=" + blogid;
     console.log(sql);
@@ -81,7 +73,7 @@ router.get('/', function(req, res, next) {
     } else {
         res.render('edit', {
             id: 0,
-            title: "",
+            title: "编辑标题",
             md: "",
         })
     }
@@ -95,7 +87,9 @@ router.post('/', function(req, res, next) {
             var title = req.body.title;
             var text = req.body.text;
             var blogid = req.body.blogid;
-            console.log(title, text, blogid);
+            console.log(title);
+            console.log(text);
+            console.log(blogid);
             if ("" == title || "" == text) {
                 res.send("data illegal");
             } else {

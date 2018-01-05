@@ -2,19 +2,34 @@
 <html>
 <head>
   <title>edit blog</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="/css/markdown.css" />
+    <link rel="stylesheet" href="/css/blog.css" />
   <style>
-    .a_bt:hover {
-      color: gray;
-      cursor:pointer;
-    }
+      .a_bt:hover {
+          color: gray;
+          cursor:pointer;
+      }
+      body {
+          margin: 0;
+          padding: 0;
+      }
+      #footer {
+      //position: absolute;
+      //bottom: 0;
+          margin-top: 100px;
+      }
   </style>
   <script src="js/ajax.js"></script>
-  <script src="js/edit.js"></script>
+  <script src="js/edit.js"></script><script src="js/edit.js"></script>
+  <script src="js/jquery.js"></script>
+  <script src="js/markdown.js"></script>
   <script>
     var blogid = <%= id %>;
     function insert_pic(pic) {
         console.log("select:",pic.innerHTML);
-        document.getElementById("text").value += "![images/blog/"+pic.innerHTML+"](images/blog/"+pic.innerHTML+")";
+        document.getElementById("text").value += "![images/blog/"+ pic.innerHTML+"](images/blog/"+pic.innerHTML+")";
     }
     function refresh_list() {
         Ajax("", "GET", "list/images", function(res) {
@@ -56,8 +71,8 @@
         document.getElementById("insert").onclick = refresh_list;
         document.getElementById("submit").onclick = function() {
           //alert("submit");
-            var title = document.getElementById("title").value;
-            var text = document.getElementById("text").value;
+            var title = document.getElementById("title").innerHTML;
+            var text = document.getElementById("md").value;
             console.log(title, text);
             var json = {
                 title: title,
@@ -75,19 +90,93 @@
                 }
             });
         }
+        document.getElementById("md").addEventListener("keydown", function(e) {
+            if (e.keyCode == 9) {
+                /*var md = $("#md").val();
+                md += "\t";
+                $("#md").val(md);*/
+                insertText(document.getElementById("md"), "\t");
+                if (e.preventDefault) {
+                    e.preventDefault();
+                }
+            }
+        })
+    }
+    function insertText(obj,str) {
+        if (document.selection) {
+            var sel = document.selection.createRange();
+            sel.text = str;
+        } else if (typeof obj.selectionStart === 'number' && typeof obj.selectionEnd === 'number') {
+            var startPos = obj.selectionStart,
+                endPos = obj.selectionEnd,
+                cursorPos = startPos,
+                tmpStr = obj.value;
+            obj.value = tmpStr.substring(0, startPos) + str + tmpStr.substring(endPos, tmpStr.length);
+            cursorPos += str.length;
+            obj.selectionStart = obj.selectionEnd = cursorPos;
+        } else {
+            obj.value += str;
+        }
+    }
+    function md_input_change(event) {
+        parse($("#md").val());
+    }
+    function md_property_change(event) {
+
     }
   </script>
 </head>
 <body>
-<div style="margin: 10px 200px 0 200px">
-  <font>title</font> <br/>
-  <input value="<%= title %>" type="text" id="title" style="width: 100%; border: 1px solid gray"/> <br />
-  <font>text</font> <br/>
-  <textarea id="text" style="width: 100%; height: 500px; padding: 0 0 0 0;"><%= md %></textarea> <br />
-  <input type="submit" id="submit" value="submit" style="width: 100%;"/> <br />
-  <input type="file" id="file" style="width: 50%;"><input type="submit" id="upload" value="upload picture" style="width: 50%;"/>
-  <input type="submit" id="insert" value="insert picture" style="width: 100%;">
+<div style="">
+    <div style="text-align: center; padding: 5px; padding-bottom: 10px; background-color: black;">
+        <a href="/index" style="text-decoration: none;" id="index-title" onclick="showLoginModal()">
+            <h1 style="font-family: Arial; color: #E0E0E0; font-weight: 900; margin: 0px; font-size: 36px;">CRAZY_MAD'S BLOG</h1>
+        </a>
+    </div>
+  <h1 style="text-align: center; font-weight: 600;" contenteditable="true" id="title"><%= title %></h1>
+    <div class="btn-toolbar">
+      <script>
+        function choose_image() {
+            if ($("#choose-image-modal").css("display") == "none") {
+                $("#choose-image-modal").show();
+            } else {
+                $("#choose-image-modal").hide();
+            }
+        }
+      </script>
+      <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-align-left"></span></button>
+      <button onclick="choose_image()" type="button" class="btn btn-default"><span class="glyphicon glyphicon glyphicon-picture"></span></button>
+    </div>
+  <div style="width: 100%;">
+    <div id="md-div" style="float: left; width: 50%;">
+      <textarea id="md" oninput="md_input_change(event)" onpropertychange="md_property_change(event)" style="width: 100%; height: 500px; padding: 0 0 0 0;"><%= md %></textarea> <br />
+    </div>
+    <div style="float: left; width: 50%;">
+      <div class="text" id="text" style="width: 100%; height: 500px; border: 1px solid gray;">
+      </div>
+    </div>
+  </div>
+  <input class="btn btn-primary btn-lg" type="submit" id="submit" value="发布" style="width: 100%;"/> <br />
+</div>
+<div id="footer" style="padding-top: 10px; text-align: center; background-color: #383733; height: 80px; width: 100%;">
+  <p style="color: #BAB7AA; font-weight: 600;">
+      Copyright &copy; 2016-2017 by crazymad<br/>
+      mail: crazy_mad01@163.com or 2116913961@qq.com<br/>
+      NBUT CS-154
+  </p>
+</div>
+
+<!-- 以下是模态窗的内容 -->
+<div id="choose-image-modal" class="c_modal" style="padding: 10px; box-shadow: gray 3px 3px 10px;">
+  <input type="file" id="file" style="width: 50%;">
+  <input type="submit" id="upload" value="upload picture" style="width: 50%;"/>
+  <input type="submit" id="insert" value="insert picture" style="width: 100%;"/>
   <div id="show_pic"></div>
 </div>
+<div id="text-abstract" class="c_modal">
+  输入摘要
+</div>
+<div id="login-modal-back" class="c_modal_back" onclick="closeLoginModal()"></div>
+<!-- 以上是模态窗的内容 -->
 </body>
 </html>
