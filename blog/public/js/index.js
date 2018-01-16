@@ -76,7 +76,7 @@ function createItems(index) {
         createPageIndex();
     }
     $.ajax({
-        url: "/list?category_id="+category_id+"&pageindex="+pageindex,
+        url: "/list?category_id="+(category_id+1)+"&pageindex="+pageindex,
         success: function(res) {
             console.log(res);
             var itemBorder = $("#item-border");

@@ -7,9 +7,12 @@
     <link rel="stylesheet" href="/css/markdown.css" />
     <link rel="stylesheet" href="/css/blog.css" />
   <style>
+      textarea {
+          resize: none;
+      }
       .a_bt:hover {
           color: gray;
-          cursor:pointer;
+          cursor: pointer;
       }
       body {
           margin: 0;
@@ -20,6 +23,18 @@
       //bottom: 0;
           margin-top: 100px;
       }
+      #text-abstract {
+          //width: 100%;
+          //height: 100%;
+          padding: 10px;
+      }
+      #abstract {
+         width: 100%;
+         height: 250px;
+      }
+      #text {
+          overflow: scroll;
+      }
   </style>
   <script src="js/ajax.js"></script>
   <script src="js/edit.js"></script><script src="js/edit.js"></script>
@@ -29,7 +44,7 @@
     var blogid = <%= id %>;
     function insert_pic(pic) {
         console.log("select:",pic.innerHTML);
-        document.getElementById("text").value += "![images/blog/"+ pic.innerHTML+"](images/blog/"+pic.innerHTML+")";
+        document.getElementById("md").value += "![images/blog/"+ pic.innerHTML+"](images/blog/"+pic.innerHTML+")";
     }
     function refresh_list() {
         Ajax("", "GET", "list/images", function(res) {
@@ -42,6 +57,38 @@
         })
     }
     window.onload = function() {
+        $.ajax({
+            url : "/list/category",
+            success : function(res) {
+                var maxcount = 0;
+                categorys = res;
+                var html = "";
+                for (var i = 0; i < categorys.length; i++) {
+                    html += "<option value='" + categorys[i].class_id + "'>" + categorys[i].name + "</option>"
+                }
+                html += "<option value='0'>其它</option>"
+                $("#select-category").html(html);
+            }
+        });
+        $("#select-category").change(function() {
+            if ($("#select-category").val() == "0") {
+                $("#new-category").removeAttr("disabled");
+            } else {
+                $("#new-category").attr("disabled", "disabled");
+                $("#new-category").val("");
+            }
+        })
+        $("#pre-submit").click(function() {
+            open_modal_by_id("text-abstract");
+        });
+        $("#login-modal-back").click(function() {
+            var modals = $(".c_modal");
+            console.log(modals);
+            for (var i = 0; i < modals.length; i++) {
+                modals.eq(i).hide();        // 没必要特判，因为当前页面内c_modal类不多
+            }
+            $("#login-modal-back").hide();
+        })
         document.getElementById("upload").onclick = function() {
             var file = document.getElementById("file").files[0];
             var json = {
@@ -70,16 +117,33 @@
         }
         document.getElementById("insert").onclick = refresh_list;
         document.getElementById("submit").onclick = function() {
-          //alert("submit");
             var title = document.getElementById("title").innerHTML;
             var text = document.getElementById("md").value;
-            console.log(title, text);
+            var abstract = document.getElementById("abstract").value;
+            var newflag = document.getElementById("select-category").value == "0" ? "true" : "false";
+            if (!abstract || !title || !text) {
+                alert("请输入完整信息！");
+                return;
+            }
+            if (newflag == "true") {
+                var category = document.getElementById("new-category").value;
+                if (category == "") {
+                    alert("请输入新栏目的名称！");
+                    return;
+                }
+            } else {
+                var category = document.getElementById("select-category").value;
+            }
+
             var json = {
                 title: title,
                 text: text,
                 blogid: blogid,
+                newflag : newflag,
+                category : category,
+                abstract : abstract
             };
-
+            console.log(JSON.stringify(json));
             var res = Ajax(json, "POST", "edit", function(res) {
                 if ("success" == res) {
                     alert("上传成功");
@@ -122,7 +186,18 @@
         parse($("#md").val());
     }
     function md_property_change(event) {
-
+        parse($("#md").val());
+    }
+    function open_modal_by_id(id) {
+        var modal = $("#" + id);
+        var modalback = $("#login-modal-back");
+        if (modal.css("display") == "none") {
+            modal.show();
+            modalback.show();
+        } else {
+            modal.hide();
+            modalback.hide();
+        }
     }
   </script>
 </head>
@@ -139,8 +214,10 @@
         function choose_image() {
             if ($("#choose-image-modal").css("display") == "none") {
                 $("#choose-image-modal").show();
+                $("#login-modal-back").show();
             } else {
                 $("#choose-image-modal").hide();
+                $("#login-modal-back").hide();
             }
         }
       </script>
@@ -151,12 +228,15 @@
     <div id="md-div" style="float: left; width: 50%;">
       <textarea id="md" oninput="md_input_change(event)" onpropertychange="md_property_change(event)" style="width: 100%; height: 500px; padding: 0 0 0 0;"><%= md %></textarea> <br />
     </div>
-    <div style="float: left; width: 50%;">
+    <div id="show" style="float: left; width: 50%;">
       <div class="text" id="text" style="width: 100%; height: 500px; border: 1px solid gray;">
       </div>
     </div>
   </div>
-  <input class="btn btn-primary btn-lg" type="submit" id="submit" value="发布" style="width: 100%;"/> <br />
+  <script>
+
+  </script>
+  <input class="btn btn-primary btn-lg" type="submit" id="pre-submit" value="发布" style="width: 100%;"/> <br />
 </div>
 <div id="footer" style="padding-top: 10px; text-align: center; background-color: #383733; height: 80px; width: 100%;">
   <p style="color: #BAB7AA; font-weight: 600;">
@@ -174,7 +254,17 @@
   <div id="show_pic"></div>
 </div>
 <div id="text-abstract" class="c_modal">
-  输入摘要
+  <textarea id="abstract" placeholder="输入摘要"></textarea>
+  <div style="padding: 5px 0 5px 0;">
+    <div style="float: left; width: 48%;">
+      <select id="select-category" class="form-control"></select>
+    </div>
+    <div style="float: right; width: 48%;">
+      <input id="new-category" class="form-control" placeholder="输入新栏目" disabled="disabled"/>
+    </div>
+    <div style="clear: both;"></div>
+  </div>
+  <input class="form-control btn btn-primary" value="发布" type="submit" id="submit"/>
 </div>
 <div id="login-modal-back" class="c_modal_back" onclick="closeLoginModal()"></div>
 <!-- 以上是模态窗的内容 -->

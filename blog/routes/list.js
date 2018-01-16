@@ -31,8 +31,8 @@ router.get('/', function(req, res, next) {
     console.log("category_id:", req.query.category_id);
     console.log("pageindex:", req.query.pageindex);
     var sql = "select * from article";
-    if (req.query.category_id >= 0) {
-        sql += " where category=" + req.query.category_id;
+    if (req.query.category_id > 0) {
+        sql += " where class=" + req.query.category_id;
     }
     if (req.query.pageindex >= 0) {
         var pageindex = parseInt(req.query.pageindex);
@@ -58,7 +58,7 @@ router.get('/', function(req, res, next) {
                 title: rows[i].title,
                 pdate: rows[i].publish_date,
                 abstract: rows[i].abstract,
-                category: rows[i].category,
+                category: rows[i].class,
             });
         }
         res.json(json);

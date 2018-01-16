@@ -224,6 +224,7 @@
               Ajax(json, "POST", "edit/delete", function(res) {
                   if ("success" == res) {
                       alert("删除成功");
+                      window.close();
                   }
               });
           }

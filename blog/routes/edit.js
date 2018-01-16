@@ -16,33 +16,70 @@ var res_uex = {
     res: "user_exsit"
 };
 
-function upload_new(res, title, md, pdate, mdate, func) {
+function upload_new(res, title, md, abstract, pdate, mdate, category, func) {
     //console.log("upload_new");
-    var sql = "insert into article (title, md, publish_date, modify_date, class) values";
-    var data = "'" + title + "','" + md + "','" + pdate + "','" + mdate + "', 2";
+    var sql = "insert into article (title, md, publish_date, modify_date, class, abstract) values";
+    var data = "'" + title + "','" + md + "','" + pdate + "','" + mdate + "', " + category + ", '" + abstract + "'";
     sql = sql + "(" + data + ")";           // 生成数据库操作命令
     console.log(sql);
     pool(sql, function(err, rows, fields) {
         if (err) {
             throw err;
         }
+        pool("update category set count=(select count(*) from article where class=class_id)", function(err, rows, fields) {
+            console.log("更新count");
+        });
         //console.log("mysql:", rows);
         func(rows, fields);
     });
 }
-function upload_old(res, blogid, title, md, mdate, func) {
+function upload_old(res, blogid, title, md, abstract, mdate, category, func) {
     console.log("upload_old");
     var sql = "update article set title='" +title + "',md='" + md + "',modify_date='" + mdate
-        + "' where id=" + blogid;
+        + "', class=" + category + ", abstract='" + abstract + "' where id=" + blogid;
     console.log(sql);
     pool(sql, function(err, rows, fields) {
         if (err) {
             throw err;
         }
+        pool("update category set count=(select count(*) from article where class=class_id)", function(err, rows, fields) {
+            console.log("更新count");
+        });
         func(rows, fields);
     });
 }
-
+function add_category(req, res, category_name) {
+    console.log("add new category");
+    var sql = "insert into category (name, count) values(\"" + category_name + "\", 0)";
+    console.log(sql);
+    pool(sql, function(err, rows, fields) {
+        console.log(rows);
+        var category = rows.insertId;
+        parse_body(req, res, category);
+    });
+}
+function parse_body(req, res, category) {
+    console.log(req.body);
+    var category = category || req.body.category;
+    var title = req.body.title;
+    var text = req.body.text;
+    var blogid = req.body.blogid;
+    var abstract = req.body.abstract;
+    var date = new Date();
+    date = moment(date).format("YYYY-MM-DD HH:mm:ss");
+    console.log(category, title, text, blogid, abstract, date);
+    if (0 == blogid) {
+        upload_new(res, title, text, abstract, date, date, category, function() {
+            //res.send(res_suc);
+            res.send("success");
+        });
+    } else {
+        upload_old(res, blogid, title, text, abstract, date, category, function() {
+            //res.send(res_suc);
+            res.send("success");
+        });
+    }
+}
 router.get('/', function(req, res, next) {
     if (req.session.admin != true) {
         res.send("you are not admin!");
@@ -84,31 +121,15 @@ router.post('/', function(req, res, next) {
         if (!req.body.title || !req.body.text) {
             res.send("data illegal");           // 数据违规
         } else {
-            var title = req.body.title;
-            var text = req.body.text;
-            var blogid = req.body.blogid;
-            console.log(title);
-            console.log(text);
-            console.log(blogid);
-            if ("" == title || "" == text) {
-                res.send("data illegal");
+            console.log(req.body);
+            var newflag = req.body.newflag;
+            // 判断是否有创建了新的栏目名称
+            if (newflag == "true") {
+                add_category(req, res, req.body.category);
             } else {
-                var flag = false;
-                var tmp = new Date();
-                tmp = moment(tmp).format("YYYY-MM-DD HH:mm:ss");
-                if (0 != blogid) {              // blogid!=0说明该文章是已有文
-                    upload_old(res, blogid, title, text, tmp, function(rows, fields) {
-                        console.log(rows.length);
-                        res.send("success");
-                    });
-                } else {                        // blogid==0说明该文章是新增文章
-                    upload_new(res, title, text, tmp, tmp, function(rows, fields) {
-                        console.log(rows.length);
-                        res.send("success");
-                    });
-                }
+                console.log("没有创建新栏目!");
+                parse_body(req, res, req.body.category);
             }
-            //res.send("success");
         }
     } else {
         res.send("you are not admin");
@@ -129,6 +150,9 @@ router.post('/delete', function(req, res, next) {
             throw err;
         } else {
             //console.log(fields);
+            pool("update category set count=(select count(*) from article where class=class_id)", function(err, rows, fields) {
+                console.log("更新count");
+            });
             res.send("success");
         }
     })
