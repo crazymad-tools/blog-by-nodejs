@@ -2,9 +2,23 @@
 <html>
   <head>
     <title><%= title %></title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="/css/blog.css" />
     <link rel="stylesheet" href="/css/markdown.css" />
     <style>
+      #comment_edit_text {
+        box-sizing: border-box;
+        width: 100%;
+        height: 285px;
+        resize: none;
+        padding: 5px;
+      }
+      #comment_edit {
+        box-shadow: 0px 0px 5px #000000;
+        padding: 10px;
+        //display: block;
+      }
       #comment_back {
         position: fixed;
         background-color: gray;
@@ -15,20 +29,19 @@
         height: 100%;
         -webkit-filter: opacity(0.7);
         z-index: 4;
-        visibility: hidden;
       }
-      #comment_modal {
+      .comment_modal {
         z-index: 5;
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         margin: 0 auto;
-        visibility: hidden;
-        width: 60%;
-        height: 100%;
-        background-color: white;
-        padding: 60px 50px 10px 50px;
+        max-width: 70%;
+        max-height: 100%;
+        padding: 10px 50px 10px 50px;
+        background-color: #F5F1E0;
+        box-sizing: border-box;
       }
       #comment_close {
         background-image: url("/images/close.png");
@@ -43,7 +56,11 @@
       }
       .comment_item {
         width: 100%;
-        //border: 1px solid gray;
+        height: 100%;
+        overflow: scroll;
+      }
+      .comment_item::-webkit-scrollbar {
+        width: 0px;
       }
       .comment_content_out_div {
         border: 1px solid gray;
@@ -76,6 +93,12 @@
         box-shadow: 5px 5px 50px #888888;
         -webkit-box-shadow: 0px 0px 15px #8C8C8C;
         padding: 10px 30px 50px 30px;
+        box-sizing: border-box;
+        max-width: 70%;
+        margin: auto;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        position: relative;
       }
       #list {
         border: 1px solid gray;
@@ -86,27 +109,13 @@
       .a_link {
         position: relative;
       }
-      /*.a_link::before {
-        content: "";
-        position: absolute;
-        top: -10px;
-        left: 0px;
-        height: 5px;
-        width: 100%;
-        background-color: red;
-      }*/
-      /*.a_link:hover::after {
-        content: "";
-        position: absolute;
-        top: 50px;
-        left: 0px;
-        height: 5px;
-        width: 100%;
-        background-color: red;
-      }*/
       .a_link_row {
         cursor: pointer;
         position: relative;
+      }
+      .a_link_row:hover {
+        text-decoration: none;
+        color: black;
       }
       .a_link_row::before {
         content: url("/images/san.png");
@@ -124,9 +133,6 @@
       }
       .a_link_row:hover::before {
         left: -15px;
-      }
-      .main_div {
-        position: relative;
       }
       .main_div::before {
         content: "";
@@ -146,8 +152,11 @@
     <script src="js/markdown.js"></script>
     <script src="js/ajax.js"></script>
     <script src="js/action.js"></script>
+    <script src="js/jquery.js"></script>
     <script>
       var blogid = <%= blogid %>;
+      var comments = "<%= comments %>";
+      var reply_id = 0;
       function show_low(event, obj) {
           var child_node = obj.node.getElementsByClassName("menu_item");
           for (var i = 0; i < child_node.length; i++) {
@@ -185,6 +194,7 @@
           }());
       }
       window.onload = function() {
+          console.log(comments);
           var menu_back = document.getElementById("menu_back");
           var menu = document.getElementById("show_menu");
           var list = document.getElementById("list");
@@ -192,70 +202,73 @@
           var showAction = new ShowMove(list, 1, 50, 0.05, 10);
           var isShow = false;       // 0:无动作,1:show,-1:hide
           menu.addEventListener("mouseover", function() {
-              /*if (isShow == 0) {
-                  isShow = 1;
-                  showAction.show(function() {
-                      isShow = 0;
-                  });
-              }*/
               showAction.show(function() {
                   isShow = 0;
               });
           });
           list.addEventListener("mouseleave", function() {
-              /*if (isShow == 0) {
-                  isShow = -1;
-                  showAction.hide(function() {
-                      isShow = 0;
-                  });
-              }*/
               showAction.hide(function() {
                   isShow = 0;
               });
           });
           parse();
           if (!document.getElementById("delete")) return;         // 确定有删除编辑按钮选项渲染出来
-          document.getElementById("delete").onclick = function() {
-              var res = confirm("确认删除该文章？");
-              if (res == false) return;
-              var json = {
-                  blogid: blogid,
-              };
-              Ajax(json, "POST", "edit/delete", function(res) {
-                  if ("success" == res) {
-                      alert("删除成功");
-                      window.close();
+          document.getElementById("delete").onclick = confirm_delete;
+      }
+      var confirm_delete = function() {
+          var res = confirm("确认删除该文章？");
+          if (res == false) return;
+          var json = {
+              blogid: blogid,
+          };
+          Ajax(json, "POST", "edit/delete", function(res) {
+              if ("success" == res) {
+                  alert("删除成功");
+                  window.close();
+              }
+          });
+      }
+      var show_comment = function() {             // 点击“文章评论”，打开评论窗
+          $("#comment_back").show();
+          $("#comment_modal").show();
+      }
+      var hide_comment = function() {
+          $("#comment_back").hide();
+          $("#comment_modal").hide();
+      }
+      var show_comment_edit = function() {
+          $("#comment_edit").show();
+      }
+      var hide_comment_edit = function() {
+          $("#comment_edit_text").val("");
+          $("#comment_edit_text").attr("placeholder", "请输入给作者的留言");
+          $("#comment_edit").hide();
+      }
+      var add_comment = function(id) {
+          reply_id = id;
+          var text = $("#comment_edit_text").val();
+          console.log("text: ", text, "  reply_id: ", reply_id);
+          hide_comment_edit();
+          if ("" == text || null == text || undefined == text) {
+              $.ajax({
+                  url : "/mysql/newcomment",
+                  text : text,
+                  reply : reply_id,
+                  success : function(res) {
+                      if ("success" == res) {
+                          alert("上传成功");
+                      }
                   }
               });
           }
       }
-      var show_comment = function() {             // 点击“文章评论”，打开评论窗
-          var back_comment = document.getElementById("comment_back");
-          var modal_comment = document.getElementById("comment_modal");
-          show_slow(modal_comment, 1);
-          show_slow(back_comment, 0.7);
-          var head_div = document.getElementsByClassName("head_div")[0];
-          var comment_div = document.getElementsByClassName("comment_content_out_div")[0];
-          console.log(head_div);
-          var head_action = new ShowMove(head_div, 1, 50, 0.05, 14);
-          var comment_action = new ShowMove(comment_div, 0, 100, 0.05, 7);
-          head_action.show(function(){});
-          comment_action.show(function(){});
-          //back_comment.show_slow();
-          //modal_comment.show_slow();
-      }
-      var hide_comment = function() {
-          var back_comment = document.getElementById("comment_back");
-          var modal_comment = document.getElementById("comment_modal");
-          hide_slow(modal_comment);
-          hide_slow(back_comment);
-          //back_comment.hide_slow();
-          //modal_comment.hide_slow();
+      var create_comment = function() {
+
       }
     </script>
   </head>
-<body style="background-image: url('/images/test_1.png'); background-attachment:fixed; background-repeat:no-repeat; background-size:100% 100%;">
-  <div style="margin: 20px 200px 20px 200px;" class="main_div" >
+<body style="background-image: url('/images/test_2.png'); background-attachment:fixed; background-repeat:no-repeat; background-size: cover; background-position: center center">
+  <div class="main_div" >
     <!-- <a href="/index"><img src="/images/title.png" style="width: 500px;"></a> -->
     <div style="text-align: center">
       <h1><%= title %></h1>
@@ -285,25 +298,118 @@
       </ul>
     </div>
   </div>
-  <div id="comment_back" style="" onclick="hide_comment()">
+  <div id="comment_back" class="c_modal_back" style="" onclick="hide_comment()">
   </div>
-  <div id="comment_modal">
-    <div id="comment_close" onclick="hide_comment()"></div>
-    <div class="comment_item">
-      <div class="row2">
-        <div class="head_div" style="opacity: 0.3; margin-top: 0px; float: left; height: 100%; text-align: center; margin-left: 10px;">
-            <img src="/images/head/default.png" />
-        </div>
-      </div>
-      <div class="row8">
-        <div style="float: left; margin-left: 120px; margin-top: 0px; opacity: 0.3" class="comment_content_out_div">
-            <font style="font-size: 15px; color: gray;"><a class="a_link">crazy_mad</a>&nbsp;发表于2017-9-25 23:12</font>
-            <div class="comment_content">
-                原理什么的不多讲，我也不是很熟，这里就简单写一些实际应用要怎么写，当然也是很简单的demo。
-            </div>
-          </div>
-        </div>
-      <div style="clear: both;"></div>
+  <div class="c_modal" id="comment_edit">
+    <textarea id="comment_edit_text" placeholder="请输入给作者的留言"></textarea>
+    <div style="float: left; width: 50%; padding: 5px 10px 0 0;">
+      <button class="btn btn-success" style="width: 100%;">发布</button>
+    </div>
+    <div style="float: left; width: 50%; padding: 5px  0 0 10px;">
+      <button class="btn btn-danger" style="width: 100%;" onclick="hide_comment_edit()">取消</button>
+    </div>
+  </div>
+  <div class="comment_modal c_modal" id="comment_modal">
+    <!-- <div id="comment_close" onclick="hide_comment()"></div> -->
+    <div style="text-align: center; margin-bottom: 10px;">
+      <button class="btn" onclick="show_comment_edit()">留言</button>
+      <button class="btn">分享</button>
+      <button class="btn">转载</button>
+      <button class="btn">打赏</button>
+    </div>
+    <div class="comment_item" id="comment_item">
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+        ss<br>
+        ss<br>
+        sss<br>
+        sss<br>
+
     </div>
   </div>
   <script>

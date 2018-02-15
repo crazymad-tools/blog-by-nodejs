@@ -9,12 +9,14 @@ var moment = require('moment');                 // 用于数据库中的datetime
 router.get('/', function(req, res, next) {
     if (req.query.blogid) {
         var sql = "select * from article where id=" + req.query.blogid;
+        var sql_2 = "select * from comment where article_id=" + req.query.blogid;
         pool(sql, function(err, rows, fields) {
             if (err) {
                 throw err;
             } else {
                 if (0 == rows.length) {
                     res.send("no this blog");
+                    return;
                 } else {
                     var json = {
                         title: rows[0].title,
@@ -28,13 +30,24 @@ router.get('/', function(req, res, next) {
                     } else {
                         edit = "";
                     }
-                    res.render('show', {
-                        title: json.title,
-                        text: json.md,
-                        pdate: json.pdate,
-                        mdate: json.mdate,
-                        blogid: req.query.blogid,
-                        edit: edit,
+                    pool(sql_2, function(err, rows, fields) {
+                        console.log(sql_2);
+                        console.log("FUCK");
+                        console.log(rows);
+                        if (rows == undefined) {
+                            var comments = "";
+                        } else {
+                            var comments = JSON.stringify(rows[0]);
+                        }
+                        res.render('show', {
+                            title: json.title,
+                            text: json.md,
+                            pdate: json.pdate,
+                            mdate: json.mdate,
+                            blogid: req.query.blogid,
+                            edit: edit,
+                            comments: comments
+                        });
                     });
                 }
             }
